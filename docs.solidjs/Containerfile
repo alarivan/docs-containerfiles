@@ -1,0 +1,24 @@
+FROM node:16-alpine3.17
+
+
+RUN apk add git
+
+RUN apk add --no-cache bash
+
+USER node
+
+WORKDIR /home/node
+
+RUN git clone https://github.com/solidjs/solid-docs-next.git
+
+WORKDIR /home/node/solid-docs-next
+
+RUN npm install
+
+ENV GITHUB_ACTIONS=1
+
+RUN npm run build
+
+WORKDIR /home/node/solid-docs-next
+
+CMD [ "npm", "run", "start" ]

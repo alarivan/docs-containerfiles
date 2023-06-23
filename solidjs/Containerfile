@@ -1,0 +1,40 @@
+FROM node:16-alpine3.17
+
+RUN apk add git
+
+RUN apk add --no-cache bash
+
+# Install pnpm with corepack
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Enable `pnpm add --global` on Alpine Linux by setting
+# home location environment variable to a location already in $PATH
+# https://github.com/pnpm/pnpm/issues/784#issuecomment-1518582235
+ENV PNPM_HOME=/usr/local/bin
+
+# Add a global package
+RUN pnpm add --global @upleveled/preflight@latest
+
+USER node
+
+WORKDIR /home/node
+
+RUN git clone https://github.com/solidjs/solid-site.git
+
+WORKDIR /home/node/solid-site
+
+RUN echo "strict-peer-dependencies=false" >> .npmrc
+
+RUN pnpm i
+
+RUN pnpm build:vite
+
+RUN pnpm add http-server
+
+USER node
+
+EXPOSE 8080
+
+ENTRYPOINT [ "/home/node/solid-site/node_modules/.bin/http-server" ]
+
+CMD [ "/home/node/solid-site/dist" ]
